@@ -9,19 +9,19 @@ const token = process.env.TOKEN
 const mytoken = process.env.MYTOKEN
 
 app.listen(process.env.PORT, () => {
-  console.log('Webhook is listening')
+  console.log('webhook is listening')
 })
 
 app.get('/webhook', (req, res) => {
   let mode = req.query['hub.mode']
-  let challenge = req.query['hub.challenge']
+  let challange = req.query['hub.challenge']
   let token = req.query['hub.verify_token']
 
   if (mode && token) {
     if (mode === 'subscribe' && token === mytoken) {
-      res.status(200).send(challenge)
+      res.status(200).send(challange)
     } else {
-      res.status(403).send('Forbidden')
+      res.status(403)
     }
   }
 })
@@ -32,6 +32,7 @@ app.post('/webhook', (req, res) => {
   console.log(JSON.stringify(body_param, null, 2))
 
   if (body_param.object) {
+    console.log('inside body param')
     if (
       body_param.entry &&
       body_param.entry[0].changes &&
@@ -45,24 +46,12 @@ app.post('/webhook', (req, res) => {
 
       console.log('phone number ' + phone_no_id)
       console.log('from ' + from)
-      console.log('message body ' + msg_body)
-
-      let user_message = msg_body.toLowerCase().trim()
-
-      let reply_message = ""
-
-      if (user_message === 'sim!' || user_message === 'sim') {
-        reply_message = 'Você respondeu SIM!'
-      } else if (user_message === 'não!' || user_message === 'nao!' || user_message === 'não' || user_message === 'nao') {
-        reply_message = 'Você respondeu NÃO!'
-      } else {
-        reply_message = `Desculpe, não entendi sua resposta: ${msg_body}`
-      }
+      console.log('boady param ' + msg_body)
 
       axios({
         method: 'POST',
         url:
-          'https://graph.facebook.com/v20.0/' +
+          'https://graph.facebook.com/v13.0/' +
           phone_no_id +
           '/messages?access_token=' +
           token,
@@ -70,18 +59,12 @@ app.post('/webhook', (req, res) => {
           messaging_product: 'whatsapp',
           to: from,
           text: {
-            body: reply_message,
+            body: msg_body,
           },
         },
         headers: {
           'Content-Type': 'application/json',
         },
-      })
-      .then(response => {
-        console.log('Mensagem enviada com sucesso')
-      })
-      .catch(error => {
-        console.error('Erro ao enviar mensagem: ', error)
       })
 
       res.sendStatus(200)
@@ -92,5 +75,5 @@ app.post('/webhook', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-  res.status(200).send('Hello! This is the WhatsApp Webhook setup')
+  res.status(200).send('hello this is webhook setup')
 })
